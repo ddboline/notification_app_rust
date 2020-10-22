@@ -1,5 +1,5 @@
-pub mod telegram_bot;
 pub mod failure_count;
+pub mod telegram_bot;
 
 #[cfg(test)]
 mod tests {

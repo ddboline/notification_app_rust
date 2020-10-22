@@ -1,14 +1,14 @@
-use tokio::fs;
-use std::collections::HashMap;
-use stack_string::StackString;
-use serde::{Serialize, Deserialize};
-use url::Url;
-use derive_more::{Into, Deref, FromStr};
-use std::convert::TryFrom;
 use anyhow::{format_err, Error};
-use std::path::{PathBuf, Path};
-use std::sync::Arc;
+use derive_more::{Deref, FromStr, Into};
+use serde::{Deserialize, Serialize};
+use stack_string::StackString;
+use std::collections::HashMap;
+use std::convert::TryFrom;
 use std::ops::Deref;
+use std::path::{Path, PathBuf};
+use std::sync::Arc;
+use tokio::fs;
+use url::Url;
 
 #[derive(Default, Debug, Deserialize)]
 pub struct ConfigInner {
@@ -81,7 +81,19 @@ impl ApiTokenConfig {
     pub async fn new(p: &Path) -> Result<Self, Error> {
         let data = fs::read_to_string(p).await?;
         let config: HashMap<String, ApiTokenEntry> = toml::from_str(&data)?;
-        Ok(Self(config.into_iter().map(|(k, v)| (k.into(), v)).collect()))
+        Ok(Self(
+            config.into_iter().map(|(k, v)| (k.into(), v)).collect(),
+        ))
+    }
+
+    pub fn add_chatid(&mut self, userid: i64, chatid: i64) -> Result<(), Error> {
+        for entry in self.0.values_mut() {
+            if entry.telegram_userid == Some(userid) {
+                entry.telegram_chatid = Some(chatid);
+                return Ok(());
+            }
+        }
+        Err(format_err!("Userid not found"))
     }
 }
 
@@ -95,8 +107,8 @@ impl Deref for ApiTokenConfig {
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ApiTokenEntry {
     pub email: Option<StackString>,
-    pub telegram_userid: Option<u64>,
-    pub telegram_chatid: Option<u64>,
+    pub telegram_userid: Option<i64>,
+    pub telegram_chatid: Option<i64>,
     pub api_token: Option<StackString>,
 }
 
@@ -104,17 +116,20 @@ pub struct ApiTokenEntry {
 mod tests {
     use anyhow::Error;
     use std::env::var_os;
-    use tempfile::NamedTempFile;
     use std::io::Write;
+    use tempfile::NamedTempFile;
 
-    use crate::config::{Config, ApiTokenConfig};
+    use crate::config::{ApiTokenConfig, Config};
 
     #[test]
     fn test_config() -> Result<(), Error> {
         let config = Config::init_config()?;
-        
+
         let api_tokens_path = var_os("API_TOKENS_PATH").unwrap();
-        assert_eq!(api_tokens_path, config.api_tokens_path.as_ref().unwrap().as_os_str());
+        assert_eq!(
+            api_tokens_path,
+            config.api_tokens_path.as_ref().unwrap().as_os_str()
+        );
 
         Ok(())
     }
@@ -128,7 +143,10 @@ mod tests {
 
         let api_tokens = config.get("user").unwrap();
 
-        assert_eq!(api_tokens.email.as_ref().unwrap().as_str(), "user@localhost");
+        assert_eq!(
+            api_tokens.email.as_ref().unwrap().as_str(),
+            "user@localhost"
+        );
         assert_eq!(api_tokens.telegram_userid, Some(8675309));
         assert_eq!(api_tokens.telegram_chatid, Some(8675310));
 
