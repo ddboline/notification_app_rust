@@ -1,3 +1,5 @@
+use tokio::fs;
+use std::collections::HashMap;
 use stack_string::StackString;
 use serde::{Serialize, Deserialize};
 use url::Url;
@@ -69,5 +71,67 @@ impl Deref for Config {
 
     fn deref(&self) -> &Self::Target {
         &self.0
+    }
+}
+
+#[derive(Debug)]
+pub struct ApiTokenConfig(HashMap<StackString, ApiTokenEntry>);
+
+impl ApiTokenConfig {
+    pub async fn new(p: &Path) -> Result<Self, Error> {
+        let data = fs::read_to_string(p).await?;
+        let config: HashMap<String, ApiTokenEntry> = toml::from_str(&data)?;
+        Ok(Self(config.into_iter().map(|(k, v)| (k.into(), v)).collect()))
+    }
+}
+
+impl Deref for ApiTokenConfig {
+    type Target = HashMap<StackString, ApiTokenEntry>;
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct ApiTokenEntry {
+    pub email: Option<StackString>,
+    pub telegram_userid: Option<u64>,
+    pub telegram_chatid: Option<u64>,
+    pub api_token: Option<StackString>,
+}
+
+#[cfg(test)]
+mod tests {
+    use anyhow::Error;
+    use std::env::var_os;
+    use tempfile::NamedTempFile;
+    use std::io::Write;
+
+    use crate::config::{Config, ApiTokenConfig};
+
+    #[test]
+    fn test_config() -> Result<(), Error> {
+        let config = Config::init_config()?;
+        
+        let api_tokens_path = var_os("API_TOKENS_PATH").unwrap();
+        assert_eq!(api_tokens_path, config.api_tokens_path.as_ref().unwrap().as_os_str());
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_api_token_config() -> Result<(), Error> {
+        let mut temp = NamedTempFile::new()?;
+        let data = include_str!("../../tests/data/test_api_tokens.toml");
+        temp.write_all(data.as_bytes())?;
+        let config = ApiTokenConfig::new(temp.path()).await?;
+
+        let api_tokens = config.get("user").unwrap();
+
+        assert_eq!(api_tokens.email.as_ref().unwrap().as_str(), "user@localhost");
+        assert_eq!(api_tokens.telegram_userid, Some(8675309));
+        assert_eq!(api_tokens.telegram_chatid, Some(8675310));
+
+        Ok(())
     }
 }
