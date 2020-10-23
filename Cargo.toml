@@ -11,6 +11,9 @@ notification_app_api = {path="notification_app_api"}
 notification_app_bot = {path="notification_app_bot"}
 notification_app_lib = {path="notification_app_lib"}
 anyhow = "1.0"
+structopt = "0.3"
+tokio = {version="0.2", features=["full"]}
+stack-string = { git = "https://github.com/ddboline/stack-string-rs.git", tag="0.1.7" }
 
 [workspace]
 members = [

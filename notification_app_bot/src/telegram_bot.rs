@@ -1,3 +1,5 @@
+use log::error;
+use futures::try_join;
 use anyhow::{format_err, Error};
 use lazy_static::lazy_static;
 use std::collections::HashMap;
@@ -9,7 +11,9 @@ use telegram_bot::{
 use tokio::fs;
 use tokio::stream::StreamExt;
 use tokio::sync::RwLock;
-use tokio::time::{self, delay_for, timeout};
+use tokio::time::{self, timeout};
+use deadqueue::unlimited::Queue;
+use stack_string::StackString;
 
 use crate::failure_count::FailureCount;
 
@@ -19,26 +23,35 @@ type UserIds = RwLock<HashMap<UserId, Option<ChatId>>>;
 
 lazy_static! {
     static ref TELEGRAM_USERIDS: UserIds = RwLock::new(HashMap::new());
+    static ref API_TOKEN_CONFIG: RwLock<ApiTokenConfig> = RwLock::new(ApiTokenConfig::default());
     static ref FAILURE_COUNT: FailureCount = FailureCount::new(5);
+}
+
+pub struct TelegramMessage {
+    pub recipient: StackString,
+    pub message: StackString,
 }
 
 pub struct TelegramBot {
     api: Arc<Api>,
     config: Config,
+    queue: Arc<Queue<TelegramMessage>>,
 }
 
 impl TelegramBot {
-    pub fn new(bot_token: &str, config: &Config) -> Self {
+    pub fn new(bot_token: &str, config: &Config, queue: Arc<Queue<TelegramMessage>>) -> Self {
         Self {
             api: Arc::new(Api::new(bot_token)),
             config: config.clone(),
+            queue,
         }
     }
 
     pub async fn run(&self) -> Result<(), Error> {
         let fill_task = self.fill_telegram_user_ids();
-
-        Ok(())
+        let notification_task = self.notification_handler();
+        let bot_task = self.telegram_worker();
+        try_join!(fill_task, notification_task, bot_task).map(|_| ())
     }
 
     pub async fn send_message(&self, chat: ChatId, msg: &str) -> Result<(), Error> {
@@ -99,6 +112,37 @@ impl TelegramBot {
         Ok(())
     }
 
+    async fn notification_handler(&self) -> Result<(), Error> {
+        loop {
+            FAILURE_COUNT.check()?;
+            match timeout(time::Duration::from_secs(3600), self.queue.pop()).await {
+                Ok(message) => {
+                    FAILURE_COUNT.reset()?;
+                    match self.process_message(&message).await {
+                        Ok(_) => FAILURE_COUNT.reset()?,
+                        Err(e) => {
+                            error!("{}", e);
+                            FAILURE_COUNT.increment()?
+                        },
+                    }
+                },
+                Err(_) => FAILURE_COUNT.increment()?,
+            }
+        }
+    }
+
+    async fn process_message(&self, message: &TelegramMessage) -> Result<(), Error> {
+        if let Some(entry) = API_TOKEN_CONFIG.read().await.get(message.recipient.as_str()) {
+            if let Some(userid) = entry.telegram_userid {
+                let userid = UserId::new(userid);
+                if let Some(Some(chatid)) = TELEGRAM_USERIDS.read().await.get(&userid) {
+                    self.send_message(*chatid, message.message.as_str()).await?;
+                }
+            }
+        }
+        Ok(())
+    }
+
     async fn fill_telegram_user_ids(&self) -> Result<(), Error> {
         loop {
             FAILURE_COUNT.check()?;
@@ -114,6 +158,7 @@ impl TelegramBot {
                         let config = ApiTokenConfig::new(api_tokens_path).await?;
                         let userid_map = Self::get_userid_chatid_dict(&config);
                         *TELEGRAM_USERIDS.write().await = userid_map;
+                        *API_TOKEN_CONFIG.write().await = config;
                     }
                 }
             }
@@ -142,6 +187,7 @@ impl TelegramBot {
         config.add_chatid(userid.into(), chatid.into())?;
         let userid_map = Self::get_userid_chatid_dict(&config);
         *TELEGRAM_USERIDS.write().await = userid_map;
+        *API_TOKEN_CONFIG.write().await = config;
         Ok(())
     }
 }

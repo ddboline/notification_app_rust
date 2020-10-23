@@ -16,6 +16,7 @@ pub struct ConfigInner {
     pub remote_url: Option<UrlWrapper>,
     pub remote_token: Option<StackString>,
     pub api_tokens_path: Option<PathBuf>,
+    pub sending_email_address: Option<StackString>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, Into, PartialEq, Deref, FromStr)]
@@ -74,7 +75,7 @@ impl Deref for Config {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct ApiTokenConfig(HashMap<StackString, ApiTokenEntry>);
 
 impl ApiTokenConfig {
@@ -104,7 +105,7 @@ impl Deref for ApiTokenConfig {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Default)]
 pub struct ApiTokenEntry {
     pub email: Option<StackString>,
     pub telegram_userid: Option<i64>,
