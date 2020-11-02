@@ -2,21 +2,29 @@ use anyhow::{format_err, Error};
 use derive_more::{Deref, FromStr, Into};
 use serde::{Deserialize, Serialize};
 use stack_string::StackString;
-use std::collections::HashMap;
-use std::convert::TryFrom;
-use std::ops::Deref;
-use std::path::{Path, PathBuf};
-use std::sync::Arc;
+use std::{
+    collections::{HashMap, HashSet},
+    convert::TryFrom,
+    ops::Deref,
+    path::{Path, PathBuf},
+    sync::Arc,
+};
 use tokio::fs;
 use url::Url;
 
-#[derive(Default, Debug, Deserialize)]
+#[derive(Default, Debug, Deserialize, Serialize)]
 pub struct ConfigInner {
     pub telegram_bot_token: Option<StackString>,
     pub remote_url: Option<UrlWrapper>,
     pub remote_token: Option<StackString>,
     pub api_tokens_path: Option<PathBuf>,
     pub sending_email_address: Option<StackString>,
+    #[serde(default = "default_port")]
+    pub port: u32,
+}
+
+fn default_port() -> u32 {
+    4083
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, Into, PartialEq, Deref, FromStr)]
@@ -87,6 +95,13 @@ impl ApiTokenConfig {
         ))
     }
 
+    pub fn api_tokens(&self) -> HashSet<StackString> {
+        self.0
+            .values()
+            .filter_map(|token| token.api_token.clone())
+            .collect()
+    }
+
     pub fn add_chatid(&mut self, userid: i64, chatid: i64) -> Result<(), Error> {
         for entry in self.0.values_mut() {
             if entry.telegram_userid == Some(userid) {
@@ -113,11 +128,16 @@ pub struct ApiTokenEntry {
     pub api_token: Option<StackString>,
 }
 
+#[derive(Serialize, Deserialize, Default, Debug)]
+pub struct TelegramMessage {
+    pub recipient: StackString,
+    pub message: StackString,
+}
+
 #[cfg(test)]
 mod tests {
     use anyhow::Error;
-    use std::env::var_os;
-    use std::io::Write;
+    use std::{env::var_os, io::Write};
     use tempfile::NamedTempFile;
 
     use crate::config::{ApiTokenConfig, Config};

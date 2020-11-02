@@ -1,23 +1,23 @@
-use log::error;
-use futures::try_join;
 use anyhow::{format_err, Error};
+use deadqueue::unlimited::Queue;
+use futures::try_join;
 use lazy_static::lazy_static;
-use std::collections::HashMap;
-use std::sync::Arc;
+use log::error;
+use std::{collections::HashMap, sync::Arc};
 use telegram_bot::{
     Api, CanReplySendMessage, CanSendMessage, ChatId, ChatRef, MessageKind, ToChatRef, UpdateKind,
     UserId,
 };
-use tokio::fs;
-use tokio::stream::StreamExt;
-use tokio::sync::RwLock;
-use tokio::time::{self, timeout};
-use deadqueue::unlimited::Queue;
-use stack_string::StackString;
+use tokio::{
+    fs,
+    stream::StreamExt,
+    sync::RwLock,
+    time::{self, timeout},
+};
 
 use crate::failure_count::FailureCount;
 
-use notification_app_lib::config::{ApiTokenConfig, Config};
+use notification_app_lib::config::{ApiTokenConfig, Config, TelegramMessage};
 
 type UserIds = RwLock<HashMap<UserId, Option<ChatId>>>;
 
@@ -25,11 +25,6 @@ lazy_static! {
     static ref TELEGRAM_USERIDS: UserIds = RwLock::new(HashMap::new());
     static ref API_TOKEN_CONFIG: RwLock<ApiTokenConfig> = RwLock::new(ApiTokenConfig::default());
     static ref FAILURE_COUNT: FailureCount = FailureCount::new(5);
-}
-
-pub struct TelegramMessage {
-    pub recipient: StackString,
-    pub message: StackString,
 }
 
 pub struct TelegramBot {
@@ -123,16 +118,20 @@ impl TelegramBot {
                         Err(e) => {
                             error!("{}", e);
                             FAILURE_COUNT.increment()?
-                        },
+                        }
                     }
-                },
+                }
                 Err(_) => FAILURE_COUNT.increment()?,
             }
         }
     }
 
     async fn process_message(&self, message: &TelegramMessage) -> Result<(), Error> {
-        if let Some(entry) = API_TOKEN_CONFIG.read().await.get(message.recipient.as_str()) {
+        if let Some(entry) = API_TOKEN_CONFIG
+            .read()
+            .await
+            .get(message.recipient.as_str())
+        {
             if let Some(userid) = entry.telegram_userid {
                 let userid = UserId::new(userid);
                 if let Some(Some(chatid)) = TELEGRAM_USERIDS.read().await.get(&userid) {
