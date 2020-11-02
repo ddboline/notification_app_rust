@@ -28,7 +28,7 @@ fn default_port() -> u32 {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, Into, PartialEq, Deref, FromStr)]
-#[serde(into = "String", try_from = "&str")]
+#[serde(into = "String", try_from = "String")]
 pub struct UrlWrapper(Url);
 
 impl From<UrlWrapper> for String {
@@ -40,6 +40,13 @@ impl From<UrlWrapper> for String {
 impl TryFrom<&str> for UrlWrapper {
     type Error = Error;
     fn try_from(item: &str) -> Result<Self, Self::Error> {
+        item.parse().map_err(Into::into)
+    }
+}
+
+impl TryFrom<String> for UrlWrapper {
+    type Error = Error;
+    fn try_from(item: String) -> Result<Self, Self::Error> {
         item.parse().map_err(Into::into)
     }
 }

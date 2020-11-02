@@ -1,0 +1,12 @@
+FROM rust_stable:latest
+MAINTAINER Daniel Boline
+
+WORKDIR /notification_app_rust
+
+ADD Cargo.toml /notification_app_rust
+ADD src /notification_app_rust/src
+ADD notification_app_api /notification_app_rust/notification_app_api
+ADD notification_app_bot /notification_app_rust/notification_app_bot
+ADD notification_app_lib /notification_app_rust/notification_app_lib
+ADD scripts /notification_app_rust/scripts
+ADD Makefile /notification_app_rust
