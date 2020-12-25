@@ -103,7 +103,6 @@ impl TelegramBot {
                     }
                 }
             }
-            time::delay_for(time::Duration::from_secs(1)).await
         }
         Ok(())
     }
@@ -162,6 +161,7 @@ impl TelegramBot {
                     }
                 }
             }
+            time::delay_for(time::Duration::from_secs(1)).await;
         }
     }
 
