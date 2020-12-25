@@ -165,6 +165,7 @@ impl TelegramBot {
                     }
                 }
             }
+            time::delay_for(time::Duration::from_secs(3600)).await;
         }
     }
 
