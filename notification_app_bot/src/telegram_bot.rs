@@ -10,6 +10,8 @@ use telegram_bot::{
 };
 use tokio::{
     fs,
+    io::AsyncReadExt,
+    net::UnixListener,
     stream::StreamExt,
     sync::RwLock,
     time::{self, timeout},
@@ -34,11 +36,11 @@ pub struct TelegramBot {
 }
 
 impl TelegramBot {
-    pub fn new(bot_token: &str, config: &Config, queue: Arc<Queue<TelegramMessage>>) -> Self {
+    pub fn new(bot_token: &str, config: &Config) -> Self {
         Self {
             api: Arc::new(Api::new(bot_token)),
             config: config.clone(),
-            queue,
+            queue: Arc::new(Queue::new()),
         }
     }
 
@@ -46,7 +48,8 @@ impl TelegramBot {
         let fill_task = self.fill_telegram_user_ids();
         let notification_task = self.notification_handler();
         let bot_task = self.telegram_worker();
-        try_join!(fill_task, notification_task, bot_task).map(|_| ())
+        let listen_task = self.listen_to_unix_socket();
+        try_join!(fill_task, notification_task, bot_task, listen_task).map(|_| ())
     }
 
     pub async fn send_message(&self, chat: ChatId, msg: &str) -> Result<(), Error> {
@@ -188,6 +191,26 @@ impl TelegramBot {
         let userid_map = Self::get_userid_chatid_dict(&config);
         *TELEGRAM_USERIDS.write().await = userid_map;
         *API_TOKEN_CONFIG.write().await = config;
+        Ok(())
+    }
+
+    async fn listen_to_unix_socket(&self) -> Result<(), Error> {
+        let mut listener = UnixListener::bind(&self.config.unix_socket)?;
+        while let Some(stream) = listener.next().await {
+            match stream {
+                Ok(mut stream) => {
+                    let mut buf = Vec::new();
+                    if let Err(e) = stream.read_to_end(&mut buf).await {
+                        error!("Read failure {}", e);
+                    }
+                    match serde_json::from_slice(&buf) {
+                        Ok(msg) => self.queue.push(msg),
+                        Err(e) => error!("Bad message {}", e),
+                    }
+                }
+                Err(e) => error!("Received error {}", e),
+            }
+        }
         Ok(())
     }
 }

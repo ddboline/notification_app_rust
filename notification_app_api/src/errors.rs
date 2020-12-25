@@ -1,7 +1,9 @@
 use actix_web::{error::ResponseError, HttpResponse};
 use anyhow::Error as AnyhowError;
+use serde_json::Error as SerdeJsonError;
 use stack_string::StackString;
 use thiserror::Error;
+use tokio::io::Error as TokioIoError;
 
 #[derive(Error, Debug)]
 pub enum ServiceError {
@@ -13,6 +15,10 @@ pub enum ServiceError {
     BadRequest(StackString),
     #[error("Unauthorized")]
     Unauthorized,
+    #[error("TokioIoError: {}", _0)]
+    TokioIoError(#[from] TokioIoError),
+    #[error("SerdeJsonError {}", _0)]
+    SerdeJsonError(#[from] SerdeJsonError),
 }
 
 impl ResponseError for ServiceError {

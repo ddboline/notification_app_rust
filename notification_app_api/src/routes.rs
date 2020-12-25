@@ -4,10 +4,14 @@ use actix_web::{
     HttpResponse,
 };
 use actix_web_httpauth::extractors::bearer::BearerAuth;
+use tokio::{io::AsyncWriteExt, net::UnixStream};
 
 use notification_app_lib::config::TelegramMessage;
 
-use crate::{app::AppState, errors::ServiceError as Error};
+use crate::{
+    app::{AppState, CONFIG},
+    errors::ServiceError as Error,
+};
 
 pub type HttpResult = Result<HttpResponse, Error>;
 
@@ -24,8 +28,10 @@ pub async fn notify_telegram(
 ) -> HttpResult {
     if data.api_tokens.contains(credentials.token()) {
         let mesg = payload.into_inner();
-        data.queue.push(mesg);
-        form_http_response("".to_string())
+        let mut sock = UnixStream::connect(&CONFIG.unix_socket).await?;
+        let data = serde_json::to_string(&mesg)?;
+        sock.write_all(data.as_bytes()).await?;
+        form_http_response(data)
     } else {
         Err(Error::Unauthorized)
     }

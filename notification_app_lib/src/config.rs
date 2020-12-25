@@ -21,10 +21,18 @@ pub struct ConfigInner {
     pub sending_email_address: Option<StackString>,
     #[serde(default = "default_port")]
     pub port: u32,
+    #[serde(default = "default_unix_socket")]
+    pub unix_socket: PathBuf,
 }
 
 fn default_port() -> u32 {
     4083
+}
+fn default_unix_socket() -> PathBuf {
+    dirs::config_dir()
+        .unwrap()
+        .join("notification_app_rust")
+        .join("notification.sock")
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, Into, PartialEq, Deref, FromStr)]

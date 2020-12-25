@@ -1,6 +1,6 @@
 [package]
 name = "notification_app_rust"
-version = "0.1.4"
+version = "0.1.5"
 authors = ["Daniel Boline <ddboline@gmail.com>"]
 edition = "2018"
 
@@ -45,4 +45,9 @@ doc = false
 [[bin]]
 name = "notification-app-api"
 path = "src/notification_app_api.rs"
+doc = false
+
+[[bin]]
+name = "notification-app-bot"
+path = "src/notification_app_bot.rs"
 doc = false
