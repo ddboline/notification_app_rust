@@ -3,7 +3,7 @@ use deadqueue::unlimited::Queue;
 use futures::try_join;
 use lazy_static::lazy_static;
 use log::error;
-use std::{collections::HashMap, sync::Arc};
+use std::collections::HashMap;
 use telegram_bot::{
     Api, CanReplySendMessage, CanSendMessage, ChatId, ChatRef, MessageKind, ToChatRef, UpdateKind,
     UserId,
@@ -30,17 +30,17 @@ lazy_static! {
 }
 
 pub struct TelegramBot {
-    api: Arc<Api>,
+    api: Api,
     config: Config,
-    queue: Arc<Queue<TelegramMessage>>,
+    queue: Queue<TelegramMessage>,
 }
 
 impl TelegramBot {
     pub fn new(bot_token: &str, config: &Config) -> Self {
         Self {
-            api: Arc::new(Api::new(bot_token)),
+            api: Api::new(bot_token),
             config: config.clone(),
-            queue: Arc::new(Queue::new()),
+            queue: Queue::new(),
         }
     }
 
