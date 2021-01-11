@@ -1,6 +1,6 @@
 [package]
 name = "notification_app_api"
-version = "0.1.5"
+version = "0.2.0"
 authors = ["Daniel Boline <ddboline@gmail.com>"]
 edition = "2018"
 
@@ -9,11 +9,11 @@ edition = "2018"
 [dependencies]
 notification_app_lib = {path = "../notification_app_lib"}
 notification_app_bot = {path = "../notification_app_bot"}
-actix-web = "3.3"
-actix-web-httpauth = "0.5"
-actix-rt = "1.1"
-deadqueue = "0.1"
+actix-web = "4.0.0-beta.1"
+actix-web-httpauth = {git="https://github.com/ddboline/actix-extras", branch="update-dependencies"}
+actix-rt = "2.0.0-beta.2"
+deadqueue = "0.2"
 anyhow = "1.0"
 thiserror = "1.0"
 lazy_static = "1.4"
-stack-string = { git = "https://github.com/ddboline/stack-string-rs.git", tag="0.1.10" }
+stack-string = { git = "https://github.com/ddboline/stack-string-rs.git", tag="0.2.0" }

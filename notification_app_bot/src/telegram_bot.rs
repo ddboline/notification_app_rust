@@ -10,10 +10,10 @@ use telegram_bot::{
 };
 use tokio::{
     fs,
-    stream::StreamExt,
     sync::RwLock,
     time::{self, timeout},
 };
+use tokio_stream::StreamExt;
 
 use crate::failure_count::FailureCount;
 
@@ -161,7 +161,7 @@ impl TelegramBot {
                     }
                 }
             }
-            time::delay_for(time::Duration::from_secs(1)).await;
+            time::sleep(time::Duration::from_secs(1)).await;
         }
     }
 
