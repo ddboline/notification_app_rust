@@ -1,6 +1,6 @@
 [package]
 name = "notification_app_rust"
-version = "0.1.5"
+version = "0.2.0"
 authors = ["Daniel Boline <ddboline@gmail.com>"]
 edition = "2018"
 
@@ -21,9 +21,9 @@ notification_app_lib = {path="notification_app_lib"}
 actix-web = "3.3"
 anyhow = "1.0"
 structopt = "0.3"
-tokio = {version="0.2", features=["full"]}
-stack-string = { git = "https://github.com/ddboline/stack-string-rs.git", tag="0.1.10" }
-reqwest = {version = "0.10", features=["cookies", "rustls-tls", "gzip", "json"]}
+tokio = {version="1.0", features=["full"]}
+stack-string = { git = "https://github.com/ddboline/stack-string-rs.git", tag="0.2.0" }
+reqwest = {version = "0.11", features=["cookies", "rustls-tls", "gzip", "json"]}
 
 [workspace]
 members = [
