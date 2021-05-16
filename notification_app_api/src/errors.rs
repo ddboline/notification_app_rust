@@ -1,6 +1,15 @@
-use actix_web::{error::ResponseError, HttpResponse};
 use anyhow::Error as AnyhowError;
+use http::StatusCode;
+use indexmap::IndexMap;
+use log::error;
+use rweb::{
+    openapi::{Entity, Response, ResponseEntity, Responses, Schema},
+    reject::{InvalidHeader, Reject},
+    Rejection, Reply,
+};
+use serde::Serialize;
 use stack_string::StackString;
+use std::{borrow::Cow, convert::Infallible, fmt::Debug};
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -15,14 +24,105 @@ pub enum ServiceError {
     Unauthorized,
 }
 
-impl ResponseError for ServiceError {
-    fn error_response(&self) -> HttpResponse {
-        match *self {
-            Self::Unauthorized => HttpResponse::Unauthorized().json("Not Authorized"),
-            Self::BadRequest(ref message) => HttpResponse::BadRequest().json(message),
+impl Reject for ServiceError {}
+
+#[derive(Serialize)]
+struct ErrorMessage {
+    code: u16,
+    message: String,
+}
+
+pub async fn error_response(err: Rejection) -> Result<Box<dyn Reply>, Infallible> {
+    let code: StatusCode;
+    let message: &str;
+
+    if err.is_not_found() {
+        code = StatusCode::NOT_FOUND;
+        message = "NOT FOUND";
+    } else if err.find::<InvalidHeader>().is_some() {
+        code = StatusCode::INTERNAL_SERVER_ERROR;
+        message = "INVALID HEADER";
+    } else if let Some(service_err) = err.find::<ServiceError>() {
+        match service_err {
+            ServiceError::BadRequest(msg) => {
+                code = StatusCode::BAD_REQUEST;
+                message = msg.as_str();
+            }
+            ServiceError::Unauthorized => {
+                code = StatusCode::FORBIDDEN;
+                message = "Not authorized to perform action";
+            }
             _ => {
-                HttpResponse::InternalServerError().json("Internal Server Error, Please try later")
+                error!("Other error: {:?}", service_err);
+                code = StatusCode::INTERNAL_SERVER_ERROR;
+                message = "Internal Server Error, Please try again later";
             }
         }
+    } else if err.find::<rweb::reject::MethodNotAllowed>().is_some() {
+        code = StatusCode::METHOD_NOT_ALLOWED;
+        message = "METHOD NOT ALLOWED";
+    } else {
+        error!("Unknown error: {:?}", err);
+        code = StatusCode::INTERNAL_SERVER_ERROR;
+        message = "Internal Server Error, Please try again later";
+    };
+
+    let reply = rweb::reply::json(&ErrorMessage {
+        code: code.as_u16(),
+        message: message.to_string(),
+    });
+    let reply = rweb::reply::with_status(reply, code);
+
+    Ok(Box::new(reply))
+}
+
+impl Entity for ServiceError {
+    fn describe() -> Schema {
+        rweb::http::Error::describe()
+    }
+}
+
+impl ResponseEntity for ServiceError {
+    fn describe_responses() -> Responses {
+        let mut map = IndexMap::new();
+
+        let error_responses = [
+            (StatusCode::NOT_FOUND, "Not Found"),
+            (StatusCode::INTERNAL_SERVER_ERROR, "Internal Server Error"),
+            (StatusCode::BAD_REQUEST, "Bad Request"),
+            (StatusCode::METHOD_NOT_ALLOWED, "Method not allowed"),
+        ];
+
+        for (code, msg) in &error_responses {
+            map.insert(
+                Cow::Owned(code.as_str().into()),
+                Response {
+                    description: Cow::Borrowed(*msg),
+                    ..Response::default()
+                },
+            );
+        }
+
+        map
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use anyhow::Error;
+    use rweb::Reply;
+
+    use crate::errors::{error_response, ServiceError};
+
+    #[tokio::test]
+    async fn test_service_error() -> Result<(), Error> {
+        let err = ServiceError::BadRequest("TEST ERROR".into()).into();
+        let resp = error_response(err).await?.into_response();
+        assert_eq!(resp.status().as_u16(), 400);
+
+        let err = ServiceError::InternalServerError.into();
+        let resp = error_response(err).await?.into_response();
+        assert_eq!(resp.status().as_u16(), 500);
+        Ok(())
     }
 }

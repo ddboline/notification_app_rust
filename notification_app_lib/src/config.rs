@@ -1,5 +1,6 @@
 use anyhow::{format_err, Error};
 use derive_more::{Deref, FromStr, Into};
+use rweb::Schema;
 use serde::{Deserialize, Serialize};
 use stack_string::StackString;
 use std::{
@@ -33,7 +34,7 @@ pub struct UrlWrapper(Url);
 
 impl From<UrlWrapper> for String {
     fn from(item: UrlWrapper) -> String {
-        item.0.into_string()
+        item.0.into()
     }
 }
 
@@ -135,7 +136,7 @@ pub struct ApiTokenEntry {
     pub api_token: Option<StackString>,
 }
 
-#[derive(Serialize, Deserialize, Default, Debug)]
+#[derive(Serialize, Deserialize, Default, Debug, Schema)]
 pub struct TelegramMessage {
     pub recipient: StackString,
     pub message: StackString,
