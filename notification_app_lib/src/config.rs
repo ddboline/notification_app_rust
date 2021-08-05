@@ -1,6 +1,5 @@
 use anyhow::{format_err, Error};
 use derive_more::{Deref, FromStr, Into};
-use rweb::Schema;
 use serde::{Deserialize, Serialize};
 use stack_string::StackString;
 use std::{
@@ -136,7 +135,7 @@ pub struct ApiTokenEntry {
     pub api_token: Option<StackString>,
 }
 
-#[derive(Serialize, Deserialize, Default, Debug, Schema)]
+#[derive(Serialize, Deserialize, Default, Debug)]
 pub struct TelegramMessage {
     pub recipient: StackString,
     pub message: StackString,

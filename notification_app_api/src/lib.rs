@@ -12,6 +12,36 @@ pub mod app;
 pub mod errors;
 pub mod routes;
 
+use rweb::Schema;
+use serde::{Deserialize, Serialize};
+use stack_string::StackString;
+
+use notification_app_lib::config::TelegramMessage;
+
+#[derive(Serialize, Deserialize, Default, Debug, Schema)]
+pub struct TelegramMessageWrapper {
+    pub recipient: StackString,
+    pub message: StackString,
+}
+
+impl From<TelegramMessage> for TelegramMessageWrapper {
+    fn from(item: TelegramMessage) -> Self {
+        Self {
+            recipient: item.recipient,
+            message: item.message,
+        }
+    }
+}
+
+impl From<TelegramMessageWrapper> for TelegramMessage {
+    fn from(item: TelegramMessageWrapper) -> Self {
+        Self {
+            recipient: item.recipient,
+            message: item.message,
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     #[test]

@@ -16,4 +16,4 @@ log = "0.4"
 tokio-stream = "0.1"
 notification_app_lib = {path = "../notification_app_lib"}
 telegram-bot = {git = "https://github.com/ddboline/telegram-bot.git", tag="0.7.3"}
-stack-string = { version="0.2", features=["rweb-openapi"] }
+stack-string = "0.2"

@@ -2,21 +2,19 @@ use rweb::{post, Json, Rejection, Reply};
 use stack_string::StackString;
 use std::str::FromStr;
 
-use notification_app_lib::config::TelegramMessage;
-
-use crate::{app::AppState, errors::ServiceError as Error};
+use crate::{app::AppState, errors::ServiceError as Error, TelegramMessageWrapper};
 
 pub type WarpResult<T> = Result<T, Rejection>;
 
 #[post("/notify")]
 pub async fn notify_telegram(
-    payload: Json<TelegramMessage>,
+    payload: Json<TelegramMessageWrapper>,
     #[data] data: AppState,
     #[header = "authorization"] credentials: BearerAuth,
 ) -> WarpResult<impl Reply> {
     if data.api_tokens.contains(credentials.token()) {
         let mesg = payload.into_inner();
-        data.queue.push(mesg);
+        data.queue.push(mesg.into());
         Ok(rweb::reply::html(""))
     } else {
         Err(Error::Unauthorized.into())
