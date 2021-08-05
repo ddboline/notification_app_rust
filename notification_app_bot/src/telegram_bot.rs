@@ -117,7 +117,7 @@ impl TelegramBot {
                         Ok(_) => FAILURE_COUNT.reset()?,
                         Err(e) => {
                             error!("{}", e);
-                            FAILURE_COUNT.increment()?
+                            FAILURE_COUNT.increment()?;
                         }
                     }
                 }

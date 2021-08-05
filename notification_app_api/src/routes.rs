@@ -34,7 +34,7 @@ impl FromStr for BearerAuth {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let mut iter = s.split_whitespace();
-        if iter.next().unwrap_or_else(|| "") == "Bearer" {
+        if iter.next().unwrap_or("") == "Bearer" {
             if let Some(auth) = iter.next() {
                 return Ok(Self(auth.into()));
             }

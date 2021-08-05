@@ -7,6 +7,7 @@
 #![allow(clippy::missing_errors_doc)]
 #![allow(clippy::cognitive_complexity)]
 #![allow(clippy::used_underscore_binding)]
+#![allow(clippy::unused_async)]
 
 pub mod app;
 pub mod errors;
