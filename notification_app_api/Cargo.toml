@@ -1,6 +1,6 @@
 [package]
 name = "notification_app_api"
-version = "0.2.3"
+version = "0.2.4"
 authors = ["Daniel Boline <ddboline@gmail.com>"]
 edition = "2018"
 
@@ -9,7 +9,7 @@ edition = "2018"
 [dependencies]
 notification_app_lib = {path = "../notification_app_lib"}
 notification_app_bot = {path = "../notification_app_bot"}
-rweb = {version="0.13", features=["openapi"]}
+rweb = {version="0.14", features=["openapi"]}
 deadqueue = "0.2"
 anyhow = "1.0"
 thiserror = "1.0"
