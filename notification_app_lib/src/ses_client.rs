@@ -8,7 +8,6 @@ use sts_profile_auth::get_client_sts;
 #[derive(Clone)]
 pub struct SesInstance {
     ses_client: SesClient,
-    region: Region,
 }
 
 impl fmt::Debug for SesInstance {
@@ -27,9 +26,8 @@ impl SesInstance {
     pub fn new(region: Option<Region>) -> Self {
         let region = region.unwrap_or(Region::UsEast1);
         Self {
-            ses_client: get_client_sts!(SesClient, region.clone())
+            ses_client: get_client_sts!(SesClient, region)
                 .expect("Failed to open SesClient"),
-            region,
         }
     }
 
