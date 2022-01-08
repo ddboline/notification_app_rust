@@ -3,7 +3,8 @@ use deadqueue::unlimited::Queue;
 use futures::try_join;
 use lazy_static::lazy_static;
 use log::error;
-use std::{collections::HashMap, sync::Arc};
+use stack_string::format_sstr;
+use std::{collections::HashMap, fmt::Write, sync::Arc};
 use telegram_bot::{
     Api, CanReplySendMessage, CanSendMessage, ChatId, ChatRef, MessageKind, ToChatRef, UpdateKind,
     UserId,
@@ -14,8 +15,6 @@ use tokio::{
     time::{self, timeout},
 };
 use tokio_stream::StreamExt;
-use stack_string::format_sstr;
-use std::fmt::Write;
 
 use crate::failure_count::FailureCount;
 
@@ -80,15 +79,8 @@ impl TelegramBot {
                             if data.starts_with("/init") {
                                 self.update_telegram_chat_id(message.from.id, chat_id)
                                     .await?;
-                                let reply = format_sstr!(
-                                    "Initializing chat_id {}",
-                                    chat_id
-                                );
-                                self.api
-                                    .send(
-                                        message.text_reply(reply.as_str()),
-                                    )
-                                    .await?;
+                                let reply = format_sstr!("Initializing chat_id {}", chat_id);
+                                self.api.send(message.text_reply(reply.as_str())).await?;
                             } else if TELEGRAM_USERIDS
                                 .read()
                                 .await

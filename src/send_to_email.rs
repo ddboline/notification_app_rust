@@ -1,5 +1,5 @@
 use anyhow::{format_err, Error};
-use stack_string::{StackString, format_sstr};
+use stack_string::{format_sstr, StackString};
 use std::fmt::Write;
 use structopt::StructOpt;
 

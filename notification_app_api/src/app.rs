@@ -1,9 +1,8 @@
 use anyhow::{format_err, Error};
 use deadqueue::unlimited::Queue;
 use rweb::Filter;
-use stack_string::{StackString, format_sstr};
-use std::fmt::Write;
-use std::{collections::HashSet, net::SocketAddr, sync::Arc};
+use stack_string::{format_sstr, StackString};
+use std::{collections::HashSet, fmt::Write, net::SocketAddr, sync::Arc};
 use tokio::task::spawn;
 
 use notification_app_bot::telegram_bot::TelegramBot;
