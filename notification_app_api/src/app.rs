@@ -1,7 +1,8 @@
 use anyhow::{format_err, Error};
 use deadqueue::unlimited::Queue;
 use rweb::Filter;
-use stack_string::StackString;
+use stack_string::{StackString, format_sstr};
+use std::fmt::Write;
 use std::{collections::HashSet, net::SocketAddr, sync::Arc};
 use tokio::task::spawn;
 
@@ -39,7 +40,7 @@ pub async fn start_app() -> Result<(), Error> {
     let notify_telegram_path = notify_telegram(app.clone());
 
     let routes = notify_telegram_path.recover(error_response);
-    let addr: SocketAddr = format!("127.0.0.1:{}", port).parse()?;
+    let addr: SocketAddr = format_sstr!("127.0.0.1:{}", port).parse()?;
     rweb::serve(routes).bind(addr).await;
     bot.await??;
     Ok(())

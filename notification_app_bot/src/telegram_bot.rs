@@ -14,6 +14,8 @@ use tokio::{
     time::{self, timeout},
 };
 use tokio_stream::StreamExt;
+use stack_string::format_sstr;
+use std::fmt::Write;
 
 use crate::failure_count::FailureCount;
 
@@ -78,12 +80,13 @@ impl TelegramBot {
                             if data.starts_with("/init") {
                                 self.update_telegram_chat_id(message.from.id, chat_id)
                                     .await?;
+                                let reply = format_sstr!(
+                                    "Initializing chat_id {}",
+                                    chat_id
+                                );
                                 self.api
                                     .send(
-                                        message.text_reply(format!(
-                                            "Initializing chat_id {}",
-                                            chat_id
-                                        )),
+                                        message.text_reply(reply.as_str()),
                                     )
                                     .await?;
                             } else if TELEGRAM_USERIDS

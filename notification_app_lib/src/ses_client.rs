@@ -12,7 +12,7 @@ pub struct SesInstance {
 
 impl fmt::Debug for SesInstance {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "SesInstance")
+        f.write_str("SesInstance")
     }
 }
 

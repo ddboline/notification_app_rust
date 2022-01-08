@@ -1,6 +1,6 @@
 [package]
 name = "notification_app_bot"
-version = "0.2.6"
+version = "0.2.7"
 authors = ["Daniel Boline <ddboline@gmail.com>"]
 edition = "2018"
 
@@ -16,4 +16,4 @@ log = "0.4"
 tokio-stream = "0.1"
 notification_app_lib = {path = "../notification_app_lib"}
 telegram-bot = {git = "https://github.com/ddboline/telegram-bot.git", tag="0.9.0-2", default_features=false, features=["rustls"]}
-stack-string = "0.4"
+stack-string = "0.5"
