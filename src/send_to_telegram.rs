@@ -32,7 +32,7 @@ async fn main() -> Result<(), Error> {
         .remote_token
         .as_ref()
         .ok_or_else(|| format_err!("No remote token"))?;
-    let bearer = format!("Bearer {}", auth_token);
+    let bearer = format!("Bearer {auth_token}");
     let mut headers = HeaderMap::new();
     headers.insert(AUTHORIZATION, HeaderValue::from_str(&bearer)?);
     let client = ClientBuilder::new().default_headers(headers).build()?;

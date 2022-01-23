@@ -22,7 +22,7 @@ async fn main() -> Result<(), Error> {
         .as_ref()
         .ok_or_else(|| format_err!("No sending email address"))?;
     let ses = SesInstance::new(None);
-    let sub = format_sstr!("Notification from {}", src_email);
+    let sub = format_sstr!("Notification from {src_email}");
     ses.send_email(
         src_email.as_str(),
         opts.email.as_str(),

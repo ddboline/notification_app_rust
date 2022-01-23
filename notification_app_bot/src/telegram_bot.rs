@@ -79,7 +79,7 @@ impl TelegramBot {
                             if data.starts_with("/init") {
                                 self.update_telegram_chat_id(message.from.id, chat_id)
                                     .await?;
-                                let reply = format_sstr!("Initializing chat_id {}", chat_id);
+                                let reply = format_sstr!("Initializing chat_id {chat_id}");
                                 self.api.send(message.text_reply(reply.as_str())).await?;
                             } else if TELEGRAM_USERIDS
                                 .read()
