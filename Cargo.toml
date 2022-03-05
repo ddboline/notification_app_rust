@@ -1,6 +1,6 @@
 [package]
 name = "notification_app_rust"
-version = "0.2.9"
+version = "0.2.10"
 authors = ["Daniel Boline <ddboline@gmail.com>"]
 edition = "2018"
 
@@ -21,7 +21,7 @@ notification_app_lib = {path="notification_app_lib"}
 anyhow = "1.0"
 structopt = "0.3"
 tokio = {version="1.17", features=["full"]}
-stack-string = "0.6"
+stack-string = "0.7"
 reqwest = {version = "0.11", features=["cookies", "rustls-tls", "gzip", "json"], default_features=false}
 
 [workspace]
