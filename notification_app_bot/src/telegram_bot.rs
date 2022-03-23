@@ -35,6 +35,7 @@ pub struct TelegramBot {
 }
 
 impl TelegramBot {
+    #[must_use]
     pub fn new(bot_token: &str, config: &Config, queue: Arc<Queue<TelegramMessage>>) -> Self {
         Self {
             api: Arc::new(Api::new(bot_token)),
@@ -43,6 +44,8 @@ impl TelegramBot {
         }
     }
 
+    /// # Errors
+    /// Return error if `fill_task` `notification_task` or `bot_task` fails
     pub async fn run(&self) -> Result<(), Error> {
         let fill_task = self.fill_telegram_user_ids();
         let notification_task = self.notification_handler();
@@ -50,6 +53,8 @@ impl TelegramBot {
         try_join!(fill_task, notification_task, bot_task).map(|_| ())
     }
 
+    /// # Errors
+    /// Return error if `api.spawn` fails
     pub async fn send_message(&self, chat: ChatId, msg: &str) -> Result<(), Error> {
         self.api.spawn(chat.text(msg));
         Ok(())

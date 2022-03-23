@@ -23,6 +23,7 @@ impl Default for SesInstance {
 }
 
 impl SesInstance {
+    #[must_use]
     pub fn new(region: Option<Region>) -> Self {
         let region = region.unwrap_or(Region::UsEast1);
         Self {
@@ -30,6 +31,8 @@ impl SesInstance {
         }
     }
 
+    /// # Errors
+    /// Return error if api call fails
     pub async fn send_email(
         &self,
         src: &str,
@@ -65,6 +68,8 @@ impl SesInstance {
             .map(|_| ())
     }
 
+    /// # Errors
+    /// Returns error if api call fails
     pub async fn get_statistics(&self) -> Result<(SesQuotas, EmailStats), Error> {
         let quota = self.ses_client.get_send_quota().await?;
         let stats = self

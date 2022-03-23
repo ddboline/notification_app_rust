@@ -34,6 +34,8 @@ struct ErrorMessage<'a> {
     message: &'a str,
 }
 
+/// # Errors
+/// Never returns an error
 pub async fn error_response(err: Rejection) -> Result<Box<dyn Reply>, Infallible> {
     let code: StatusCode;
     let message: &str;

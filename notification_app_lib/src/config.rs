@@ -55,10 +55,13 @@ impl TryFrom<String> for UrlWrapper {
 pub struct Config(Arc<ConfigInner>);
 
 impl Config {
+    #[must_use]
     pub fn new() -> Self {
         Self::default()
     }
 
+    /// # Errors
+    /// Return error if deserializing environment variables fails
     pub fn init_config() -> Result<Self, Error> {
         let fname = Path::new("config.env");
         let config_dir = dirs::config_dir().ok_or_else(|| format_err!("No CONFIG directory"))?;
@@ -94,6 +97,8 @@ impl Deref for Config {
 pub struct ApiTokenConfig(HashMap<StackString, ApiTokenEntry>);
 
 impl ApiTokenConfig {
+    /// # Errors
+    /// Return error if parsing toml fails
     pub async fn new(p: &Path) -> Result<Self, Error> {
         let data = fs::read_to_string(p).await?;
         let config: HashMap<String, ApiTokenEntry> = toml::from_str(&data)?;
@@ -102,6 +107,7 @@ impl ApiTokenConfig {
         ))
     }
 
+    #[must_use]
     pub fn api_tokens(&self) -> HashSet<StackString> {
         self.0
             .values()
@@ -109,6 +115,8 @@ impl ApiTokenConfig {
             .collect()
     }
 
+    /// # Errors
+    /// Return error if userid not found
     pub fn add_chatid(&mut self, userid: i64, chatid: i64) -> Result<(), Error> {
         for entry in self.0.values_mut() {
             if entry.telegram_userid == Some(userid) {

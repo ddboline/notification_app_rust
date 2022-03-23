@@ -16,6 +16,8 @@ pub struct AppState {
     pub api_tokens: Arc<HashSet<StackString>>,
 }
 
+/// # Errors
+/// Returns error if app initialization fails
 pub async fn start_app() -> Result<(), Error> {
     let config = Config::init_config()?;
     let queue = Arc::new(Queue::new());
