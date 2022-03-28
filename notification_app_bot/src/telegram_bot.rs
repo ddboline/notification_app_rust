@@ -4,7 +4,7 @@ use futures::try_join;
 use lazy_static::lazy_static;
 use log::error;
 use stack_string::format_sstr;
-use std::{collections::HashMap, fmt::Write, sync::Arc};
+use std::{collections::HashMap, sync::Arc};
 use telegram_bot::{
     Api, CanReplySendMessage, CanSendMessage, ChatId, ChatRef, MessageKind, ToChatRef, UpdateKind,
     UserId,

@@ -55,11 +55,6 @@ impl TryFrom<String> for UrlWrapper {
 pub struct Config(Arc<ConfigInner>);
 
 impl Config {
-    #[must_use]
-    pub fn new() -> Self {
-        Self::default()
-    }
-
     /// # Errors
     /// Return error if deserializing environment variables fails
     pub fn init_config() -> Result<Self, Error> {

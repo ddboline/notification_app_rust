@@ -1,6 +1,5 @@
 use anyhow::{format_err, Error};
 use stack_string::{format_sstr, StackString};
-use std::fmt::Write;
 use structopt::StructOpt;
 
 use notification_app_lib::{config::Config, ses_client::SesInstance};
