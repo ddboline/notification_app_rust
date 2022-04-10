@@ -1,9 +1,9 @@
 use anyhow::Error;
-use chrono::{DateTime, Utc};
 use rusoto_core::Region;
 use rusoto_ses::{Body, Content, Destination, Message, SendEmailRequest, Ses, SesClient};
 use std::fmt;
 use sts_profile_auth::get_client_sts;
+use time::{format_description::well_known::Rfc3339, OffsetDateTime};
 
 #[derive(Clone)]
 pub struct SesInstance {
@@ -85,7 +85,9 @@ impl SesInstance {
                     complaints: point.complaints?,
                     delivery_attempts: point.delivery_attempts?,
                     rejects: point.rejects?,
-                    min_timestamp: Some(point.timestamp?.parse().ok()?),
+                    min_timestamp: point
+                        .timestamp
+                        .and_then(|s| OffsetDateTime::parse(&s, &Rfc3339).ok()),
                     ..EmailStats::default()
                 })
             })
@@ -126,6 +128,6 @@ pub struct EmailStats {
     pub complaints: i64,
     pub delivery_attempts: i64,
     pub rejects: i64,
-    pub min_timestamp: Option<DateTime<Utc>>,
-    pub max_timestamp: Option<DateTime<Utc>>,
+    pub min_timestamp: Option<OffsetDateTime>,
+    pub max_timestamp: Option<OffsetDateTime>,
 }
