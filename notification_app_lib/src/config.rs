@@ -27,7 +27,7 @@ fn default_port() -> u32 {
     4083
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, Into, PartialEq, Deref, FromStr)]
+#[derive(Serialize, Deserialize, Clone, Debug, Into, PartialEq, Deref, FromStr, Eq)]
 #[serde(into = "String", try_from = "String")]
 pub struct UrlWrapper(Url);
 
