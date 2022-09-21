@@ -1,6 +1,6 @@
 [package]
 name = "notification_app_api"
-version = "0.3.3"
+version = "0.3.4"
 authors = ["Daniel Boline <ddboline@gmail.com>"]
 edition = "2018"
 
@@ -19,4 +19,4 @@ log = "0.4"
 indexmap = "1.6"
 serde = {version="1.0", features=["derive"]}
 stack-string = { version="0.7", features=["rweb-openapi"] }
-tokio = {version="1.19", features=["full"]}
+tokio = {version="1.21", features=["full"]}
