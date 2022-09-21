@@ -16,18 +16,22 @@ struct SendToEmailOpts {
 async fn main() -> Result<(), Error> {
     let opts = SendToEmailOpts::from_args();
     let config = Config::init_config()?;
-    let src_email = config
-        .sending_email_address
-        .as_ref()
-        .ok_or_else(|| format_err!("No sending email address"))?;
-    let ses = SesInstance::new(None);
-    let sub = format_sstr!("Notification from {src_email}");
-    ses.send_email(
-        src_email.as_str(),
-        opts.email.as_str(),
-        &sub,
-        opts.message.as_str(),
-    )
-    .await?;
-    Ok(())
+    tokio::spawn(async move {
+        let src_email = config
+            .sending_email_address
+            .as_ref()
+            .ok_or_else(|| format_err!("No sending email address"))?;
+        let ses = SesInstance::new(None);
+        let sub = format_sstr!("Notification from {src_email}");
+
+        ses.send_email(
+            src_email.as_str(),
+            opts.email.as_str(),
+            &sub,
+            opts.message.as_str(),
+        )
+        .await
+    })
+    .await
+    .unwrap()
 }
