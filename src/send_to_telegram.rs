@@ -4,15 +4,15 @@ use reqwest::{
     ClientBuilder,
 };
 use stack_string::StackString;
-use structopt::StructOpt;
+use clap::Parser;
 
 use notification_app_lib::config::{Config, TelegramMessage};
 
-#[derive(StructOpt)]
+#[derive(Parser)]
 struct SendToTelegram {
-    #[structopt(short, long)]
+    #[clap(short, long)]
     recipient: StackString,
-    #[structopt(short, long)]
+    #[clap(short, long)]
     message: StackString,
 }
 

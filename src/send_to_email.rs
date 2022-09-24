@@ -1,14 +1,14 @@
 use anyhow::{format_err, Error};
 use stack_string::{format_sstr, StackString};
-use structopt::StructOpt;
+use clap::Parser;
 
 use notification_app_lib::{config::Config, ses_client::SesInstance};
 
-#[derive(StructOpt)]
+#[derive(Parser)]
 struct SendToEmailOpts {
-    #[structopt(short, long)]
+    #[clap(short, long)]
     email: StackString,
-    #[structopt(short, long)]
+    #[clap(short, long)]
     message: StackString,
 }
 

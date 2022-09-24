@@ -55,7 +55,7 @@ impl TelegramBot {
 
     /// # Errors
     /// Return error if `api.spawn` fails
-    pub async fn send_message(&self, chat: ChatId, msg: &str) -> Result<(), Error> {
+    pub fn send_message(&self, chat: ChatId, msg: &str) -> Result<(), Error> {
         self.api.spawn(chat.text(msg));
         Ok(())
     }
@@ -135,7 +135,7 @@ impl TelegramBot {
             if let Some(userid) = entry.telegram_userid {
                 let userid = UserId::new(userid);
                 if let Some(Some(chatid)) = TELEGRAM_USERIDS.read().await.get(&userid) {
-                    self.send_message(*chatid, message.message.as_str()).await?;
+                    self.send_message(*chatid, message.message.as_str())?;
                 }
             }
         }
