@@ -1,10 +1,10 @@
 use anyhow::{format_err, Error};
+use clap::Parser;
 use reqwest::{
     header::{HeaderMap, HeaderValue, AUTHORIZATION},
     ClientBuilder,
 };
 use stack_string::StackString;
-use clap::Parser;
 
 use notification_app_lib::config::{Config, TelegramMessage};
 
@@ -18,7 +18,7 @@ struct SendToTelegram {
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
-    let opts = SendToTelegram::from_args();
+    let opts = SendToTelegram::parse();
     let config = Config::init_config()?;
     let payload = TelegramMessage {
         recipient: opts.recipient.clone(),

@@ -1,6 +1,6 @@
 use anyhow::{format_err, Error};
-use stack_string::{format_sstr, StackString};
 use clap::Parser;
+use stack_string::{format_sstr, StackString};
 
 use notification_app_lib::{config::Config, ses_client::SesInstance};
 
@@ -14,7 +14,7 @@ struct SendToEmailOpts {
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
-    let opts = SendToEmailOpts::from_args();
+    let opts = SendToEmailOpts::parse();
     let config = Config::init_config()?;
     tokio::spawn(async move {
         let src_email = config
