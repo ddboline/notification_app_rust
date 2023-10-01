@@ -1,6 +1,5 @@
 use anyhow::Error as AnyhowError;
 use http::StatusCode;
-use indexmap::IndexMap;
 use log::error;
 use rweb::{
     openapi::{
@@ -91,7 +90,7 @@ impl Entity for ServiceError {
 
 impl ResponseEntity for ServiceError {
     fn describe_responses(_: &mut ComponentDescriptor) -> Responses {
-        let mut map = IndexMap::new();
+        let mut map = Responses::new();
 
         let error_responses = [
             (StatusCode::NOT_FOUND, "Not Found"),
