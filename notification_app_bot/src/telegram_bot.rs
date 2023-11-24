@@ -64,7 +64,7 @@ impl TelegramBot {
         loop {
             FAILURE_COUNT.check()?;
             match timeout(time::Duration::from_secs(3600), self.bot_handler()).await {
-                Ok(Ok(_)) | Err(_) => FAILURE_COUNT.reset()?,
+                Ok(Ok(())) | Err(_) => FAILURE_COUNT.reset()?,
                 Ok(Err(_)) => FAILURE_COUNT.increment()?,
             }
         }
@@ -114,7 +114,7 @@ impl TelegramBot {
                 Ok(message) => {
                     FAILURE_COUNT.reset()?;
                     match self.process_message(&message).await {
-                        Ok(_) => FAILURE_COUNT.reset()?,
+                        Ok(()) => FAILURE_COUNT.reset()?,
                         Err(e) => {
                             error!("{}", e);
                             FAILURE_COUNT.increment()?;

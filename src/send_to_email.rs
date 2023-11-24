@@ -16,12 +16,13 @@ struct SendToEmailOpts {
 async fn main() -> Result<(), Error> {
     let opts = SendToEmailOpts::parse();
     let config = Config::init_config()?;
+    let sdk_config = aws_config::load_from_env().await;
     tokio::spawn(async move {
         let src_email = config
             .sending_email_address
             .as_ref()
             .ok_or_else(|| format_err!("No sending email address"))?;
-        let ses = SesInstance::new(None);
+        let ses = SesInstance::new(&sdk_config);
         let sub = format_sstr!("Notification from {src_email}");
 
         ses.send_email(

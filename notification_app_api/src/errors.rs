@@ -1,7 +1,7 @@
 use anyhow::Error as AnyhowError;
-use http::StatusCode;
 use log::error;
 use rweb::{
+    http::StatusCode,
     openapi::{
         ComponentDescriptor, ComponentOrInlineSchema, Entity, Response, ResponseEntity, Responses,
     },
