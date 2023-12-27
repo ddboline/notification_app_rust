@@ -74,17 +74,15 @@ impl SesInstance {
             .send_data_points
             .unwrap_or_default()
             .into_iter()
-            .map(|point| {
-                EmailStats {
-                    bounces: point.bounces,
-                    complaints: point.complaints,
-                    delivery_attempts: point.delivery_attempts,
-                    rejects: point.rejects,
-                    min_timestamp: point.timestamp.and_then(|t| {
-                        OffsetDateTime::from_unix_timestamp(t.as_secs_f64() as i64).ok()
-                    }),
-                    ..EmailStats::default()
-                }
+            .map(|point| EmailStats {
+                bounces: point.bounces,
+                complaints: point.complaints,
+                delivery_attempts: point.delivery_attempts,
+                rejects: point.rejects,
+                min_timestamp: point
+                    .timestamp
+                    .and_then(|t| OffsetDateTime::from_unix_timestamp(t.as_secs_f64() as i64).ok()),
+                ..EmailStats::default()
             })
             .fold(EmailStats::default(), |mut stats, point| {
                 stats.bounces += point.bounces;
