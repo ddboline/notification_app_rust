@@ -1,6 +1,6 @@
 [package]
 name = "notification_app_api"
-version = "0.4.5"
+version = "0.4.6"
 authors = ["Daniel Boline <ddboline@gmail.com>"]
 edition = "2018"
 
@@ -9,7 +9,6 @@ edition = "2018"
 [dependencies]
 anyhow = "1.0"
 deadqueue = "0.2"
-lazy_static = "1.4"
 log = "0.4"
 notification_app_lib = {path = "../notification_app_lib"}
 notification_app_bot = {path = "../notification_app_bot"}

@@ -1,6 +1,6 @@
 [package]
 name = "notification_app_bot"
-version = "0.4.5"
+version = "0.4.6"
 authors = ["Daniel Boline <ddboline@gmail.com>"]
 edition = "2018"
 
@@ -10,9 +10,9 @@ edition = "2018"
 anyhow = "1.0"
 deadqueue = "0.2"
 futures = "0.3"
-lazy_static = "1.4"
 log = "0.4"
 notification_app_lib = {path = "../notification_app_lib"}
+once_cell = "1.0"
 stack-string = "0.8"
 telegram-bot = {git = "https://github.com/ddboline/telegram-bot.git", tag="0.9.0-4", default_features=false}
 tokio = {version="1.34", features=["rt", "macros", "rt-multi-thread"]}

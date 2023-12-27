@@ -1,7 +1,7 @@
 use anyhow::{format_err, Error};
 use deadqueue::unlimited::Queue;
 use futures::try_join;
-use lazy_static::lazy_static;
+use once_cell::sync::Lazy;
 use log::error;
 use stack_string::format_sstr;
 use std::{collections::HashMap, sync::Arc};
@@ -22,11 +22,9 @@ use notification_app_lib::config::{ApiTokenConfig, Config, TelegramMessage};
 
 type UserIds = RwLock<HashMap<UserId, Option<ChatId>>>;
 
-lazy_static! {
-    static ref TELEGRAM_USERIDS: UserIds = RwLock::new(HashMap::new());
-    static ref API_TOKEN_CONFIG: RwLock<ApiTokenConfig> = RwLock::new(ApiTokenConfig::default());
-    static ref FAILURE_COUNT: FailureCount = FailureCount::new(5);
-}
+static TELEGRAM_USERIDS: Lazy<UserIds> = Lazy::new(|| RwLock::new(HashMap::new()));
+static API_TOKEN_CONFIG: Lazy<RwLock<ApiTokenConfig>> = Lazy::new(|| RwLock::new(ApiTokenConfig::default()));
+static FAILURE_COUNT: Lazy<FailureCount> = Lazy::new(|| FailureCount::new(5));
 
 pub struct TelegramBot {
     api: Arc<Api>,
