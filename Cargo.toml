@@ -16,14 +16,14 @@ Notification service."""
 
 [dependencies]
 anyhow = "1.0"
-aws-config = {version="1.0", features=["behavior-version-latest"]}
+aws-config = {version="1.5", features=["behavior-version-latest"]}
 clap = {version="4.0", features=["derive"]}
 notification_app_api = {path="notification_app_api"}
 notification_app_bot = {path="notification_app_bot"}
 notification_app_lib = {path="notification_app_lib"}
 reqwest = {version = "0.12", features=["cookies", "rustls-tls", "gzip", "json"], default_features=false}
 stack-string = "0.8"
-tokio = {version="1.38", features=["rt", "macros", "rt-multi-thread"]}
+tokio = {version="1.40", features=["rt", "macros", "rt-multi-thread"]}
 
 [workspace]
 members = [
