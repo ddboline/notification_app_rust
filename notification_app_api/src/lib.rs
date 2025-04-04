@@ -5,6 +5,7 @@
 #![allow(clippy::cast_possible_truncation)]
 #![allow(clippy::cognitive_complexity)]
 #![allow(clippy::unused_async)]
+#![allow(clippy::similar_names)]
 
 pub mod app;
 pub mod errors;
