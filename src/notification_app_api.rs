@@ -1,6 +1,4 @@
-use anyhow::Error;
-
-use notification_app_api::app::start_app;
+use notification_app_api::{app::start_app, errors::ServiceError as Error};
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {

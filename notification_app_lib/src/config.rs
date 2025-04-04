@@ -79,7 +79,7 @@ impl Config {
     }
 }
 
-impl Deref for Config {
+impl std::ops::Deref for Config {
     type Target = ConfigInner;
 
     fn deref(&self) -> &Self::Target {
@@ -122,7 +122,7 @@ impl ApiTokenConfig {
     }
 }
 
-impl Deref for ApiTokenConfig {
+impl std::ops::Deref for ApiTokenConfig {
     type Target = HashMap<StackString, ApiTokenEntry>;
     fn deref(&self) -> &Self::Target {
         &self.0

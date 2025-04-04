@@ -10,13 +10,13 @@ pub mod app;
 pub mod errors;
 pub mod routes;
 
-use rweb::Schema;
 use serde::{Deserialize, Serialize};
 use stack_string::StackString;
+use utoipa::ToSchema;
 
 use notification_app_lib::config::TelegramMessage;
 
-#[derive(Serialize, Deserialize, Default, Debug, Schema)]
+#[derive(Serialize, Deserialize, Default, Debug, ToSchema)]
 pub struct TelegramMessageWrapper {
     pub recipient: StackString,
     pub message: StackString,

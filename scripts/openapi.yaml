@@ -1,0 +1,69 @@
+openapi: '3.1.0'
+info:
+  title: Notification API
+  description: Simple Notification Service
+  contact:
+    name: Daniel Boline
+    email: ddboline@gmail.com
+  license:
+    name: ''
+  version: '0.4.9'
+paths:
+  /notify:
+    post:
+      operationId: notify_telegram
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TelegramMessageWrapper'
+        required: true
+      responses:
+        '201':
+          description: Send Notification
+          content:
+            text/html:
+              schema:
+                type: string
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - message
+                properties:
+                  message:
+                    $ref: '#/components/schemas/str'
+        '401':
+          description: Not Authorized
+          content:
+            text/html:
+              schema:
+                type: string
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - message
+                properties:
+                  message:
+                    $ref: '#/components/schemas/str'
+components:
+  schemas:
+    TelegramMessageWrapper:
+      type: object
+      required:
+      - recipient
+      - message
+      properties:
+        message:
+          $ref: '#/components/schemas/str'
+        recipient:
+          $ref: '#/components/schemas/str'
+    str:
+      type: string

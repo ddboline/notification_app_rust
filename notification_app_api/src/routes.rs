@@ -1,30 +1,60 @@
-use rweb::{post, Json, Rejection, Reply};
+use axum::{
+    extract::{FromRequestParts, Json, State},
+    http::{header::AUTHORIZATION, request::Parts},
+};
 use stack_string::StackString;
-use std::str::FromStr;
+use std::{str::FromStr, sync::Arc};
+use utoipa::{OpenApi, PartialSchema};
+use utoipa_axum::{router::OpenApiRouter, routes};
+use utoipa_helper::{html_response::HtmlResponse as HtmlBase, UtoipaResponse};
 
 use crate::{app::AppState, errors::ServiceError as Error, TelegramMessageWrapper};
 
-pub type WarpResult<T> = Result<T, Rejection>;
+type WarpResult<T> = Result<T, Error>;
 
-#[post("/notify")]
-pub async fn notify_telegram(
+#[derive(UtoipaResponse)]
+#[response(description = "Send Notification", status = "CREATED")]
+#[rustfmt::skip]
+struct NotifyResponse(HtmlBase::<&'static str>);
+
+#[utoipa::path(post, path = "/notify", responses(NotifyResponse, Error))]
+async fn notify_telegram(
+    data: State<Arc<AppState>>,
+    credentials: BearerAuth,
     payload: Json<TelegramMessageWrapper>,
-    #[data] data: AppState,
-    #[header = "authorization"] credentials: BearerAuth,
-) -> WarpResult<impl Reply> {
+) -> WarpResult<NotifyResponse> {
     if data.api_tokens.contains(credentials.token()) {
-        let mesg = payload.into_inner();
-        data.queue.push(mesg.into());
-        Ok(rweb::reply::html(""))
+        let Json(payload) = payload;
+        data.queue.push(payload.into());
+        Ok(HtmlBase::new("").into())
     } else {
-        Err(Error::Unauthorized.into())
+        Err(Error::Unauthorized)
     }
 }
+
+pub fn notify_telegram_router(app: &AppState) -> OpenApiRouter {
+    let app = Arc::new(app.clone());
+
+    OpenApiRouter::new()
+        .routes(routes!(notify_telegram))
+        .with_state(app)
+}
+
+#[derive(OpenApi)]
+#[openapi(
+    info(
+        title = "Notification API",
+        description = "Simple Notification Service",
+    ),
+    components(schemas(TelegramMessageWrapper))
+)]
+pub struct ApiDoc;
 
 struct BearerAuth(StackString);
 
 impl BearerAuth {
-    pub fn token(&self) -> &str {
+    #[must_use]
+    fn token(&self) -> &str {
         &self.0
     }
 }
@@ -40,5 +70,21 @@ impl FromStr for BearerAuth {
             }
         }
         Err(Error::BadRequest("Invalid Bearer Header".into()))
+    }
+}
+
+impl<S> FromRequestParts<S> for BearerAuth
+where
+    S: Send + Sync,
+{
+    type Rejection = Error;
+
+    async fn from_request_parts(parts: &mut Parts, _state: &S) -> Result<Self, Self::Rejection> {
+        parts
+            .headers
+            .get(AUTHORIZATION)
+            .ok_or_else(|| Error::Unauthorized)?
+            .to_str()?
+            .parse()
     }
 }

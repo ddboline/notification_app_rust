@@ -1,14 +1,19 @@
-use anyhow::{format_err, Error};
+use axum::http::StatusCode;
 use deadqueue::unlimited::Queue;
-use rweb::Filter;
+use log::debug;
 use stack_string::{format_sstr, StackString};
 use std::{collections::HashSet, net::SocketAddr, sync::Arc};
-use tokio::task::spawn;
+use tokio::{net::TcpListener, task::spawn};
+use utoipa::OpenApi;
+use utoipa_axum::router::OpenApiRouter;
 
 use notification_app_bot::telegram_bot::TelegramBot;
 use notification_app_lib::config::{ApiTokenConfig, Config, TelegramMessage};
 
-use crate::{errors::error_response, routes::notify_telegram};
+use crate::{
+    errors::ServiceError as Error,
+    routes::{notify_telegram_router, ApiDoc},
+};
 
 #[derive(Clone)]
 pub struct AppState {
@@ -24,25 +29,98 @@ pub async fn start_app() -> Result<(), Error> {
     let api_tokens_path = config
         .api_tokens_path
         .as_ref()
-        .ok_or_else(|| format_err!("No api token path set"))?;
+        .ok_or_else(|| Error::BadRequest(format_sstr!("No api token path set")))?;
     let api_tokens = Arc::new(ApiTokenConfig::new(api_tokens_path).await?.api_tokens());
 
     let telegram_bot_token = config
         .telegram_bot_token
         .as_ref()
-        .ok_or_else(|| format_err!("No Telegram Token"))?;
+        .ok_or_else(|| Error::BadRequest(format_sstr!("No Telegram Token")))?;
     let bot = TelegramBot::new(telegram_bot_token.as_str(), &config, queue.clone());
     let bot = spawn(async move { bot.run().await });
 
-    let port = config.port;
-
     let app = AppState { queue, api_tokens };
 
-    let notify_telegram_path = notify_telegram(app.clone());
-
-    let routes = notify_telegram_path.recover(error_response);
-    let addr: SocketAddr = format_sstr!("127.0.0.1:{port}").parse()?;
-    rweb::serve(routes).bind(addr).await;
+    run_api(app, config.port).await?;
     bot.await??;
     Ok(())
+}
+
+async fn run_api(app: AppState, port: u32) -> Result<(), Error> {
+    let app = Arc::new(app);
+
+    let (router, api) = OpenApiRouter::with_openapi(ApiDoc::openapi())
+        .merge(notify_telegram_router(&app))
+        .split_for_parts();
+
+    let spec_json = serde_json::to_string_pretty(&api)?;
+    let spec_yaml = serde_yml::to_string(&api)?;
+
+    let router = router
+        .route(
+            "/notify/openapi/json",
+            axum::routing::get(|| async move {
+                (
+                    StatusCode::OK,
+                    [("content-type", "application/json")],
+                    spec_json,
+                )
+            }),
+        )
+        .route(
+            "/notify/openapi/yaml",
+            axum::routing::get(|| async move {
+                (StatusCode::OK, [("content-type", "text/yaml")], spec_yaml)
+            }),
+        );
+
+    let addr: SocketAddr = format_sstr!("127.0.0.1:{port}").parse()?;
+    debug!("{addr:?}");
+    let listener = TcpListener::bind(&addr).await?;
+    axum::serve(listener, router.into_make_service()).await?;
+
+    Ok(())
+}
+
+#[cfg(test)]
+mod test {
+    use anyhow::Error;
+    use deadqueue::unlimited::Queue;
+    use maplit::hashset;
+    use stack_string::format_sstr;
+    use std::sync::Arc;
+
+    use crate::app::{run_api, AppState};
+
+    #[tokio::test]
+    async fn test_run_app() -> Result<(), Error> {
+        let api_tokens = Arc::new(hashset! {"12345".into()});
+        let app = AppState {
+            queue: Arc::new(Queue::new()),
+            api_tokens,
+        };
+
+        let test_port = 12345;
+        tokio::task::spawn({
+            async move {
+                env_logger::init();
+                run_api(app, test_port).await.unwrap()
+            }
+        });
+        tokio::time::sleep(std::time::Duration::from_secs(10)).await;
+
+        let client = reqwest::Client::new();
+
+        let url = format_sstr!("http://localhost:{test_port}/notify/openapi/yaml");
+        let spec_yaml = client
+            .get(url.as_str())
+            .send()
+            .await?
+            .error_for_status()?
+            .text()
+            .await?;
+
+        tokio::fs::write("../scripts/openapi.yaml", &spec_yaml).await?;
+        Ok(())
+    }
 }
