@@ -26,7 +26,7 @@ async fn notify_telegram(
     if data.api_tokens.contains(credentials.token()) {
         let Json(payload) = payload;
         data.queue.push(payload.into());
-        Ok(HtmlBase::new("").into())
+        Ok(HtmlBase::new("message sent").into())
     } else {
         Err(Error::Unauthorized)
     }

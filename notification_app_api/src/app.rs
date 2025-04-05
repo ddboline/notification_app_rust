@@ -85,8 +85,9 @@ async fn run_api(app: AppState, port: u32) -> Result<(), Error> {
 #[cfg(test)]
 mod test {
     use anyhow::Error;
+    use axum::http::{header::AUTHORIZATION, StatusCode};
     use deadqueue::unlimited::Queue;
-    use maplit::hashset;
+    use maplit::{hashmap, hashset};
     use stack_string::format_sstr;
     use std::sync::Arc;
 
@@ -95,9 +96,10 @@ mod test {
     #[tokio::test]
     async fn test_run_app() -> Result<(), Error> {
         let api_tokens = Arc::new(hashset! {"12345".into()});
-        let app = AppState {
-            queue: Arc::new(Queue::new()),
-            api_tokens,
+        let queue = Arc::new(Queue::new());
+        let app = {
+            let queue = queue.clone();
+            AppState { queue, api_tokens }
         };
 
         let test_port = 12345;
@@ -110,6 +112,22 @@ mod test {
         tokio::time::sleep(std::time::Duration::from_secs(10)).await;
 
         let client = reqwest::Client::new();
+        let data = hashmap! {
+            "recipient" => "ddboline",
+            "message" => "test message",
+        };
+
+        let url = format_sstr!("http://localhost:{test_port}/notify");
+        let response = client
+            .post(url.as_str())
+            .header(AUTHORIZATION, "Bearer 12345")
+            .json(&data)
+            .send()
+            .await?
+            .error_for_status()?;
+        assert_eq!(response.status(), StatusCode::CREATED);
+        let text = response.text().await?;
+        assert_eq!(text, "message sent");
 
         let url = format_sstr!("http://localhost:{test_port}/notify/openapi/yaml");
         let spec_yaml = client
@@ -121,6 +139,12 @@ mod test {
             .await?;
 
         tokio::fs::write("../scripts/openapi.yaml", &spec_yaml).await?;
+
+        while let Some(message) = queue.try_pop() {
+            assert_eq!(message.recipient, "ddboline");
+            assert_eq!(message.message, "test message");
+            println!("{message:?}");
+        }
         Ok(())
     }
 }
