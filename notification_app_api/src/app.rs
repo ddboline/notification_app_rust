@@ -1,4 +1,4 @@
-use axum::http::StatusCode;
+use axum::http::{header::CONTENT_TYPE, StatusCode};
 use deadqueue::unlimited::Queue;
 use log::debug;
 use stack_string::{format_sstr, StackString};
@@ -62,7 +62,7 @@ async fn run_api(app: AppState, port: u32) -> Result<(), Error> {
             axum::routing::get(|| async move {
                 (
                     StatusCode::OK,
-                    [("content-type", "application/json")],
+                    [(CONTENT_TYPE, mime::APPLICATION_JSON.essence_str())],
                     spec_json,
                 )
             }),
@@ -70,7 +70,7 @@ async fn run_api(app: AppState, port: u32) -> Result<(), Error> {
         .route(
             "/notify/openapi/yaml",
             axum::routing::get(|| async move {
-                (StatusCode::OK, [("content-type", "text/yaml")], spec_yaml)
+                (StatusCode::OK, [(CONTENT_TYPE, "text/yaml")], spec_yaml)
             }),
         );
 

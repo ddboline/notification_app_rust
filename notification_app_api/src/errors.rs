@@ -1,7 +1,10 @@
 use anyhow::Error as AnyhowError;
 use axum::{
     extract::Json,
-    http::{header::ToStrError, StatusCode},
+    http::{
+        header::{ToStrError, CONTENT_TYPE},
+        StatusCode,
+    },
     response::{IntoResponse, Response},
 };
 use log::error;
@@ -57,16 +60,21 @@ impl IntoResponse for ServiceError {
         match self {
             Self::Unauthorized => (
                 StatusCode::UNAUTHORIZED,
+                [(CONTENT_TYPE, mime::TEXT_HTML.essence_str())],
                 ErrorMessage {
                     message: format_sstr!("Not authorized"),
                 },
             )
                 .into_response(),
-            Self::BadRequest(message) => {
-                (StatusCode::BAD_REQUEST, ErrorMessage { message }).into_response()
-            }
+            Self::BadRequest(message) => (
+                StatusCode::BAD_REQUEST,
+                [(CONTENT_TYPE, mime::APPLICATION_JSON.essence_str())],
+                ErrorMessage { message },
+            )
+                .into_response(),
             e => (
                 StatusCode::INTERNAL_SERVER_ERROR,
+                [(CONTENT_TYPE, mime::APPLICATION_JSON.essence_str())],
                 ErrorMessage {
                     message: format_sstr!("Internal Server Error: {e}"),
                 },
@@ -90,21 +98,25 @@ impl IntoResponses for ServiceError {
                 ResponseBuilder::new()
                     .description("Not Authorized")
                     .content(
-                        "text/html",
+                        mime::TEXT_HTML.essence_str(),
                         ContentBuilder::new().schema(Some(String::schema())).build(),
                     ),
             )
             .response(
                 StatusCode::BAD_REQUEST.as_str(),
-                ResponseBuilder::new()
-                    .description("Bad Request")
-                    .content("application/json", error_message_content.clone()),
+                ResponseBuilder::new().description("Bad Request").content(
+                    mime::APPLICATION_JSON.essence_str(),
+                    error_message_content.clone(),
+                ),
             )
             .response(
                 StatusCode::INTERNAL_SERVER_ERROR.as_str(),
                 ResponseBuilder::new()
                     .description("Internal Server Error")
-                    .content("application/json", error_message_content.clone()),
+                    .content(
+                        mime::APPLICATION_JSON.essence_str(),
+                        error_message_content.clone(),
+                    ),
             )
             .build()
             .into()
@@ -128,6 +140,6 @@ mod test {
         println!("AddrParseError {}", std::mem::size_of::<AddrParseError>());
         println!("JoinError {}", std::mem::size_of::<JoinError>());
 
-        assert_eq!(std::mem::size_of::<Error>(), 40);
+        assert_eq!(std::mem::size_of::<Error>(), 32);
     }
 }

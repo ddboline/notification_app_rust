@@ -115,7 +115,7 @@ impl TelegramBot {
                     match self.process_message(&message).await {
                         Ok(()) => FAILURE_COUNT.reset()?,
                         Err(e) => {
-                            error!("{}", e);
+                            error!("{e}",);
                             FAILURE_COUNT.increment()?;
                         }
                     }
