@@ -18,8 +18,11 @@ use utoipa::ToSchema;
 use notification_app_lib::config::TelegramMessage;
 
 #[derive(Serialize, Deserialize, Default, Debug, ToSchema)]
+#[schema(as = TelegramMessage)]
 pub struct TelegramMessageWrapper {
+    #[schema(inline)]
     pub recipient: StackString,
+    #[schema(inline)]
     pub message: StackString,
 }
 

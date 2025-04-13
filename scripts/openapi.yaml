@@ -7,16 +7,23 @@ info:
     email: ddboline@gmail.com
   license:
     name: ''
-  version: '0.5.0'
+  version: '0.5.1'
 paths:
   /notify:
     post:
       operationId: notify_telegram
+      parameters:
+      - name: authorization
+        in: header
+        description: Bearer Authorization
+        required: true
+        schema:
+          type: string
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/TelegramMessageWrapper'
+              $ref: '#/components/schemas/TelegramMessage'
         required: true
       responses:
         '201':
@@ -35,7 +42,7 @@ paths:
                 - message
                 properties:
                   message:
-                    $ref: '#/components/schemas/str'
+                    type: string
         '401':
           description: Not Authorized
           content:
@@ -52,18 +59,16 @@ paths:
                 - message
                 properties:
                   message:
-                    $ref: '#/components/schemas/str'
+                    type: string
 components:
   schemas:
-    TelegramMessageWrapper:
+    TelegramMessage:
       type: object
       required:
       - recipient
       - message
       properties:
         message:
-          $ref: '#/components/schemas/str'
+          type: string
         recipient:
-          $ref: '#/components/schemas/str'
-    str:
-      type: string
+          type: string

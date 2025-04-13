@@ -17,7 +17,15 @@ type WarpResult<T> = Result<T, Error>;
 #[rustfmt::skip]
 struct NotifyResponse(HtmlBase::<&'static str>);
 
-#[utoipa::path(post, path = "/notify", responses(NotifyResponse, Error))]
+#[utoipa::path(
+    post,
+    path = "/notify",
+    params(
+        ("authorization" = inline(StackString), Header, description = "Bearer Authorization"),
+    ),
+    request_body = TelegramMessageWrapper,
+    responses(NotifyResponse, Error),
+)]
 async fn notify_telegram(
     data: State<Arc<AppState>>,
     credentials: BearerAuth,

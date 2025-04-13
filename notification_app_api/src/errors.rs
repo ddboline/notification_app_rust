@@ -46,6 +46,7 @@ pub enum ServiceError {
 
 #[derive(Serialize, ToSchema)]
 struct ErrorMessage {
+    #[schema(inline)]
     message: StackString,
 }
 
