@@ -1,6 +1,6 @@
 [package]
 name = "notification_app_api"
-version = "0.5.2"
+version = "0.5.3"
 authors = ["Daniel Boline <ddboline@gmail.com>"]
 edition = "2018"
 
@@ -20,7 +20,7 @@ notification_app_bot = {path = "../notification_app_bot"}
 serde = {version="1.0", features=["derive"]}
 stack-string = { version="1.1", features=["utoipa_types", "axum_types"] }
 thiserror = "2.0"
-tokio = {version="1.44", features=["rt", "macros", "rt-multi-thread"]}
+tokio = {version="1.46", features=["rt", "macros", "rt-multi-thread"]}
 utoipa = { version = "5.3", features = ["axum_extras", "yaml", "time", "uuid", "smallvec", "url", "openapi_extensions", "decimal"] }
 utoipa-helper = "0.1"
 utoipa-axum = { version = "0.2" }
