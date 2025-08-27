@@ -2,9 +2,11 @@ use anyhow::{format_err, Error};
 use deadqueue::unlimited::Queue;
 use futures::try_join;
 use log::error;
-use std::sync::LazyLock;
 use stack_string::format_sstr;
-use std::{collections::HashMap, sync::Arc};
+use std::{
+    collections::HashMap,
+    sync::{Arc, LazyLock},
+};
 use telegram_bot::{
     Api, CanReplySendMessage, CanSendMessage, ChatId, ChatRef, MessageKind, ToChatRef, UpdateKind,
     UserId,
