@@ -64,7 +64,7 @@ impl TelegramBot {
     async fn telegram_worker(&self) -> Result<(), Error> {
         loop {
             FAILURE_COUNT.check()?;
-            match timeout(time::Duration::from_secs(3600), self.bot_handler()).await {
+            match timeout(time::Duration::from_hours(1), self.bot_handler()).await {
                 Ok(Ok(())) | Err(_) => FAILURE_COUNT.reset()?,
                 Ok(Err(_)) => FAILURE_COUNT.increment()?,
             }
@@ -111,13 +111,13 @@ impl TelegramBot {
     async fn notification_handler(&self) -> Result<(), Error> {
         loop {
             FAILURE_COUNT.check()?;
-            match timeout(time::Duration::from_secs(3600), self.queue.pop()).await {
+            match timeout(time::Duration::from_hours(1), self.queue.pop()).await {
                 Ok(message) => {
                     FAILURE_COUNT.reset()?;
                     match self.process_message(&message).await {
                         Ok(()) => FAILURE_COUNT.reset()?,
                         Err(e) => {
-                            error!("{e}",);
+                            error!("{e}");
                             FAILURE_COUNT.increment()?;
                         }
                     }
