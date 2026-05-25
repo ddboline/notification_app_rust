@@ -14,5 +14,5 @@ log = "0.4"
 notification_app_lib = {path = "../notification_app_lib"}
 stack-string = "1.1"
 telegram-bot = {git = "https://github.com/ddboline/telegram-bot.git", tag="0.9.0-4", default-features=false}
-tokio = {version="1.49", features=["rt", "macros", "rt-multi-thread"]}
+tokio = {version="1.52", features=["rt", "macros", "rt-multi-thread"]}
 tokio-stream = "0.1"
